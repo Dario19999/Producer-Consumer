@@ -27,6 +27,7 @@
      <string notr="true">QProgressBar {
     border: 2px solid grey;
     border-radius: 10px;
+	padding-right: 1px;
 }
 
 QProgressBar::chunk {
@@ -37,7 +38,7 @@ QProgressBar::chunk {
 }</string>
     </property>
     <property name="value">
-     <number>60</number>
+     <number>100</number>
     </property>
     <property name="textVisible">
      <bool>false</bool>
@@ -56,7 +57,10 @@ QProgressBar::chunk {
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true"/>
+     <string notr="true">QGroupBox{
+	background-color: rgb(136, 136, 136);
+	border: none;
+}</string>
     </property>
     <property name="title">
      <string/>
@@ -134,6 +138,12 @@ QProgressBar::chunk {
       <width>201</width>
       <height>281</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QGroupBox{
+	background-color: rgb(136, 136, 136);
+	border: none;
+}</string>
     </property>
     <property name="title">
      <string/>
@@ -233,13 +243,16 @@ QProgressBar::chunk {
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>470</y>
+      <y>490</y>
       <width>221</width>
       <height>101</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true"/>
+     <string notr="true">QGroupBox{
+	background-color: rgb(136, 136, 136);
+	border: none;
+}</string>
     </property>
     <property name="title">
      <string/>
