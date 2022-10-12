@@ -75,7 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     "{"
                                     "background-color: black;"
                                     "}")
-    pass
+    
         
 class Producer(QtCore.QThread):
   
@@ -88,7 +88,7 @@ class Producer(QtCore.QThread):
   def run(self):
       while True:
         if usedBuffer != BUFFER_SIZE:
-          time.sleep(random.uniform(0,2))
+          time.sleep(random.uniform(0,1))
           self.progress.emit(10)
       return
 
@@ -103,7 +103,7 @@ class Consumer(QtCore.QThread):
   def run(self):
     while True:
       if usedBuffer != BUFFER_SIZE:
-        time.sleep(random.uniform(0,2))
+        time.sleep(random.uniform(0,1))
         self.progress.emit(-10)
   
 if __name__ == "__main__":
