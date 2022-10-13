@@ -15,31 +15,31 @@ class MainWindow(QtWidgets.QMainWindow):
     ui_path = os.path.dirname(os.path.abspath(__file__))
     self.ui = uic.loadUi(os.path.join(ui_path, 'mainWindow.ui'), self)
     
-    self.iniciar.clicked.connect(self.run_simulation)
+    self.iniciar.clicked.connect(self.run_producer_consumer)
     
     self.semaphores_UI_init()
     
   def produce(self, ammount):
     global usedBuffer
     mutex.lock()
-    print("produce", ammount)
     self.turn_producer_ON()
     self.turn_consumer_OFF()
-    usedBuffer += ammount
+    if usedBuffer != BUFFER_SIZE:
+      usedBuffer += ammount
     self.bufferProgressBar.setValue(usedBuffer)
     mutex.unlock()
     
   def consume(self, ammount):
     global usedBuffer
     mutex.lock()
-    print("consume", ammount)
     self.turn_producer_OFF()
     self.turn_consumer_ON()
-    usedBuffer += ammount
+    if usedBuffer != 0:
+      usedBuffer += ammount
     self.bufferProgressBar.setValue(usedBuffer)
     mutex.unlock()
 
-  def run_simulation(self):
+  def run_producer_consumer(self):
     self.producer = Producer(parent=None)
     self.consumer = Consumer(parent=None)
     
@@ -159,6 +159,7 @@ class Producer(QtCore.QThread):
   def run(self):
       while True:
         if usedBuffer != BUFFER_SIZE:
+          # print(usedBuffer)
           time.sleep(random.uniform(0,1))
           self.not_full.emit()
           self.progress.emit(10)
@@ -180,6 +181,7 @@ class Consumer(QtCore.QThread):
   def run(self):
     while True:
       if usedBuffer != 0:
+        # print(usedBuffer)
         time.sleep(random.uniform(0,1))
         self.not_empty.emit()
         self.progress.emit(-10)
