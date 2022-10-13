@@ -1,4 +1,3 @@
-from ast import Global
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import * 
 from PyQt5 import uic
@@ -22,6 +21,12 @@ class MainWindow(QtWidgets.QMainWindow):
     self.iniciar.clicked.connect(self.run_producer_consumer)
     
     self.semaphores_UI_init()
+    
+    self.bufferProgressBar.setStyleSheet("QProgressBar::Chunk"
+                                    "{"
+                                    "background-image: url(progress_bkgrnd.png);"
+                                    "margin: 1px;"
+                                    "}")
   
   #Produce es el método que bloquea el buffer con exclusión mutua
   #para agregar un "recurso" a la barra
