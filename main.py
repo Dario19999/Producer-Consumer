@@ -4,12 +4,16 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 import sys, time, os, random
 
+#Variables globales 
 BUFFER_SIZE = 100
 usedBuffer = 0
 mutex = QtCore.QMutex()
 
+#Clase MainWindow es el hilo principal de la aplicación
 class MainWindow(QtWidgets.QMainWindow):
     
+  #En el constructor cargamos la UI, inicializamos las señales de cada componente
+  #y se inicializan los semaforos de cada elemento
   def __init__(self):
     QtWidgets.QMainWindow.__init__(self)
     ui_path = os.path.dirname(os.path.abspath(__file__))
@@ -18,17 +22,25 @@ class MainWindow(QtWidgets.QMainWindow):
     self.iniciar.clicked.connect(self.run_producer_consumer)
     
     self.semaphores_UI_init()
-    
+  
+  #Produce es el método que bloquea el buffer con exclusión mutua
+  #para agregar un "recurso" a la barra
   def produce(self, ammount):
     global usedBuffer
-    mutex.lock()
-    self.turn_producer_ON()
+    mutex.lock() #Se hace lock del recurso para que no pueda ser accedido por otros hilos
+    #Se hace toggle de los semáforos para efecto gráfico
+    self.turn_producer_ON() 
     self.turn_consumer_OFF()
+    #Validamos si el buffer está lleno para agregar un recurso o no
     if usedBuffer != BUFFER_SIZE:
       usedBuffer += ammount
+      
+    #Se "agrega" el recurso al buffer
     self.bufferProgressBar.setValue(usedBuffer)
     mutex.unlock()
     
+  #Consume es el método que bloquea el buffer con exclusión mutua
+  #para consumir un "recurso" a la barra
   def consume(self, ammount):
     global usedBuffer
     mutex.lock()
@@ -39,6 +51,8 @@ class MainWindow(QtWidgets.QMainWindow):
     self.bufferProgressBar.setValue(usedBuffer)
     mutex.unlock()
 
+  #Esta función es la que inicializa las señales de cada hilo y posteriormente los inicia
+  #Se dispara pulsando el botón de "Iniciar Productor-Consumidor"
   def run_producer_consumer(self):
     self.producer = Producer(parent=None)
     self.consumer = Consumer(parent=None)
@@ -58,7 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     self.iniciar.setEnabled(False)
     
-      
+  #A partir de aquí todos los métodos son para togglear los semáforos
   def semaphores_UI_init(self):
     self.productorOn.setStyleSheet("QGroupBox"
                                     "{"
@@ -145,8 +159,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                     "background-color: rgb(255, 0, 0);"
                                     "}")   
     
+#La clase del productor extiende de QThread y únicamente emite un 10 que
+#Se suma al buffer para representar un recurso producido
 class Producer(QtCore.QThread):
-  
+  #inicializamos señales
   progress = QtCore.pyqtSignal(int)
   full = QtCore.pyqtSignal()
   not_full = QtCore.pyqtSignal()
@@ -158,17 +174,21 @@ class Producer(QtCore.QThread):
   
   def run(self):
       while True:
+        #Se valida que el buffer no esté lleno para poder producir
         if usedBuffer != BUFFER_SIZE:
           # print(usedBuffer)
           time.sleep(random.uniform(0,1))
           self.not_full.emit()
+          #Además se emiten las señales para togglear los semáforos del buffer
           self.progress.emit(10)
         else:
           self.full.emit()
       return
 
+#La clase del productor extiende de QThread y únicamente emite un -10 que
+#Se suma al buffer para representar un recurso consumido
 class Consumer(QtCore.QThread):
-  
+  #inicializamos señales
   progress = QtCore.pyqtSignal(int)
   empty = QtCore.pyqtSignal()
   not_empty = QtCore.pyqtSignal()
@@ -180,6 +200,7 @@ class Consumer(QtCore.QThread):
     
   def run(self):
     while True:
+      #Se valida que el buffer no esté vacío para poder consumir
       if usedBuffer != 0:
         # print(usedBuffer)
         time.sleep(random.uniform(0,1))
@@ -188,6 +209,7 @@ class Consumer(QtCore.QThread):
       else:
         self.empty.emit()
 
+#La función main ejecuta la app de pyqt
 if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
   mainWindow = MainWindow()
