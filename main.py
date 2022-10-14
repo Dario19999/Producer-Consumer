@@ -6,7 +6,13 @@ import sys, time, os, random
 #Variables globales 
 BUFFER_SIZE = 100
 usedBuffer = 0
+readers = 0
+#mutex para productores-consumidores
 mutex = QtCore.QMutex()
+#Semáforos para escritores-consumidores
+S_mutex = QtCore.QSemaphore(1)
+freeBuffer = QtCore.QSemaphore(1)
+tourniquet = QtCore.QSemaphore(1)
 
 #Clase MainWindow es el hilo principal de la aplicación
 class MainWindow(QtWidgets.QMainWindow):
@@ -18,15 +24,17 @@ class MainWindow(QtWidgets.QMainWindow):
     ui_path = os.path.dirname(os.path.abspath(__file__))
     self.ui = uic.loadUi(os.path.join(ui_path, 'mainWindow.ui'), self)
     
-    self.iniciar.clicked.connect(self.run_producer_consumer)
+    self.iniciar_PC.clicked.connect(self.run_producer_consumer)
+    self.iniciar_LE.clicked.connect(self.run_writers_readers)
     
     self.semaphores_UI_init()
     
-    self.bufferProgressBar.setStyleSheet("QProgressBar::Chunk"
-                                    "{"
-                                    "background-image: url(progress_bkgrnd.png);"
-                                    "margin: 1px;"
-                                    "}")
+    self.productor_label.setHidden(True)
+    self.consumidor_label.setHidden(True)
+  
+    self.escritor_label.setHidden(True)
+    self.lector_1_label.setHidden(True)
+    self.lector_2_label.setHidden(True)
   
   #Produce es el método que bloquea el buffer con exclusión mutua
   #para agregar un "recurso" a la barra
@@ -59,15 +67,20 @@ class MainWindow(QtWidgets.QMainWindow):
   #Esta función es la que inicializa las señales de cada hilo y posteriormente los inicia
   #Se dispara pulsando el botón de "Iniciar Productor-Consumidor"
   def run_producer_consumer(self):
+    global usedBuffer
+    usedBuffer = 0
+    
+    self.set_PC_UI()
+        
     self.producer = Producer(parent=None)
     self.consumer = Consumer(parent=None)
     
-    self.producer.finished.connect(self.producer.terminate)
+    self.producer.finished.connect(self.producer.stop)
     self.producer.progress.connect(self.produce)
     self.producer.full.connect(self.turn_buffer_OFF)
     self.producer.not_full.connect(self.turn_buffer_ON)
     
-    self.consumer.finished.connect(self.consumer.terminate)
+    self.consumer.finished.connect(self.consumer.stop)
     self.consumer.progress.connect(self.consume)
     self.consumer.empty.connect(self.turn_buffer_OFF)
     self.consumer.not_empty.connect(self.turn_buffer_ON)
@@ -75,8 +88,90 @@ class MainWindow(QtWidgets.QMainWindow):
     self.producer.start()
     self.consumer.start()
 
-    self.iniciar.setEnabled(False)
+    self.iniciar_PC.setEnabled(False)
     
+  def write(self, ammount):
+    global usedBuffer
+    
+    tourniquet.acquire()
+    freeBuffer.acquire()
+    
+    self.turn_producer_ON() 
+    self.turn_consumer_OFF()
+    self.turn_reader_OFF()
+    
+    #Validamos si el buffer está lleno para agregar un recurso o no
+    if usedBuffer != BUFFER_SIZE:
+      usedBuffer += ammount
+      
+    #Se "agrega" el recurso al buffer
+    self.bufferProgressBar.setValue(usedBuffer)
+    
+    freeBuffer.release()
+    tourniquet.release()
+    
+  def read(self, ammount):
+    global usedBuffer
+    global readers
+    
+    tourniquet.acquire()
+    tourniquet.release()
+    
+    S_mutex.acquire()
+    
+    readers += 1
+    
+    if readers == 1:
+      freeBuffer.acquire()
+      
+    S_mutex.release()
+    
+    self.turn_producer_OFF()
+    self.turn_consumer_ON()
+    self.turn_reader_ON()
+    if usedBuffer != 0:
+      usedBuffer += ammount
+    self.bufferProgressBar.setValue(usedBuffer)
+    
+    S_mutex.acquire()
+    
+    readers -= 1
+    
+    if readers == 0:
+      freeBuffer.release()
+    S_mutex.release()
+    
+  def run_writers_readers(self):
+    global usedBuffer
+    usedBuffer = 0
+    
+    self.set_LE_UI()
+        
+    self.writer = Producer(parent=None)
+    self.reader_1 = Consumer(parent=None)
+    self.reader_2 = Consumer(parent=None)
+    
+    self.writer.finished.connect(self.writer.stop)
+    self.writer.progress.connect(self.write)
+    self.writer.full.connect(self.turn_buffer_OFF)
+    self.writer.not_full.connect(self.turn_buffer_ON)
+    
+    self.reader_1.finished.connect(self.reader_1.stop)
+    self.reader_1.progress.connect(self.read)
+    self.reader_1.empty.connect(self.turn_buffer_OFF)
+    self.reader_1.not_empty.connect(self.turn_buffer_ON)
+    
+    self.reader_2.finished.connect(self.reader_2.stop)
+    self.reader_2.progress.connect(self.read)
+    self.reader_2.empty.connect(self.turn_buffer_OFF)
+    self.reader_2.not_empty.connect(self.turn_buffer_ON)
+    
+    self.writer.start()
+    self.reader_1.start()
+    self.reader_2.start()
+    
+    self.iniciar_LE.setEnabled(False)
+      
   #A partir de aquí todos los métodos son para togglear los semáforos
   def semaphores_UI_init(self):
     self.productorOn.setStyleSheet("QGroupBox"
@@ -92,6 +187,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                     "background-color: black;"
                                     "}")
     self.consumidorOff.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: black;"
+                                    "}")
+    self.lectorOn.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: black;"
+                                    "}")
+    self.lectorOff.setStyleSheet("QGroupBox"
                                     "{"
                                     "background-color: black;"
                                     "}")
@@ -163,6 +266,53 @@ class MainWindow(QtWidgets.QMainWindow):
                                     "{"
                                     "background-color: rgb(255, 0, 0);"
                                     "}")   
+  
+  def turn_reader_ON(self):
+    self.lectorOn.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: rgb(14, 216, 31);"
+                                    "}")
+    self.lectorOff.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: black;"
+                                    "}")    
+  
+  def turn_reader_OFF(self):
+    self.lectorOn.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: black;"
+                                    "}")
+    self.lectorOff.setStyleSheet("QGroupBox"
+                                    "{"
+                                    "background-color: rgb(255, 0, 0);"
+                                    "}")   
+  
+  def set_LE_UI(self):
+    self.bufferProgressBar.setStyleSheet("QProgressBar::Chunk"
+                                        "{"
+                                        "background-image: url(L-E_bckgrnd.png);"
+                                        "margin: 1px;"
+                                        "}")
+    self.productor_label.setHidden(True)
+    self.consumidor_label.setHidden(True)
+  
+    self.escritor_label.setHidden(False)
+    self.lector_1_label.setHidden(False)
+    self.lector_2_label.setHidden(False)
+    
+  def set_PC_UI(self):
+    self.bufferProgressBar.setStyleSheet("QProgressBar::Chunk"
+                                      "{"
+                                      "background-image: url(L-E_bckgrnd.png);"
+                                      "margin: 1px;"
+                                      "}")
+    
+    self.productor_label.setHidden(False)
+    self.consumidor_label.setHidden(False)
+  
+    self.escritor_label.setHidden(True)
+    self.lector_1_label.setHidden(True)
+    self.lector_2_label.setHidden(True)
     
 #La clase del productor extiende de QThread y únicamente emite un 10 que
 #Se suma al buffer para representar un recurso producido
@@ -178,17 +328,20 @@ class Producer(QtCore.QThread):
     super(Producer, self).__init__(parent)
   
   def run(self):
-      while True:
-        #Se valida que el buffer no esté lleno para poder producir
-        if usedBuffer != BUFFER_SIZE:
-          # print(usedBuffer)
-          time.sleep(random.uniform(0,1))
-          self.not_full.emit()
-          #Además se emiten las señales para togglear los semáforos del buffer
-          self.progress.emit(10)
-        else:
-          self.full.emit()
-      return
+    while True:
+      #Se valida que el buffer no esté lleno para poder producir
+      if usedBuffer != BUFFER_SIZE:
+        # print(usedBuffer)
+        time.sleep(random.uniform(0,1))
+        self.not_full.emit()
+        #Además se emiten las señales para togglear los semáforos del buffer
+        self.progress.emit(10)
+      else:
+        self.full.emit()
+    return
+  
+  def stop(self):
+    self.terminate()
 
 #La clase del productor extiende de QThread y únicamente emite un -10 que
 #Se suma al buffer para representar un recurso consumido
@@ -213,7 +366,11 @@ class Consumer(QtCore.QThread):
         self.progress.emit(-10)
       else:
         self.empty.emit()
-
+    return
+  
+  def stop(self):
+    self.terminate()
+    
 #La función main ejecuta la app de pyqt
 if __name__ == "__main__":
   app = QtWidgets.QApplication(sys.argv)
