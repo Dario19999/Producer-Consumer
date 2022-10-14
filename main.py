@@ -29,6 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     self.semaphores_UI_init()
     
+    #Se esconden los label para activarlos según el caso
     self.productor_label.setHidden(True)
     self.consumidor_label.setHidden(True)
   
@@ -89,10 +90,13 @@ class MainWindow(QtWidgets.QMainWindow):
     self.consumer.start()
 
     self.iniciar_PC.setEnabled(False)
-    
+  
+  #Método que maneja los semaforos para "Escribir"
   def write(self, ammount):
     global usedBuffer
     
+    #El torniquete se usa como un mutex para el escritor
+    #bloqueando el semaforo freebufer y la "Escritura"
     tourniquet.acquire()
     freeBuffer.acquire()
     
@@ -109,18 +113,23 @@ class MainWindow(QtWidgets.QMainWindow):
     
     freeBuffer.release()
     tourniquet.release()
-    
+  
+  #Método que maneja los semaforos para "Leer"
   def read(self, ammount):
     global usedBuffer
     global readers
     
+    #Para evitar la inanición del escritor manejamos un torniquete
+    #que controla el acceso de los lectores al recurso
     tourniquet.acquire()
     tourniquet.release()
     
+    #Utilizamos nuestro semáforo mutex para aumentar nuestros lectores
+    #Y "leer"
     S_mutex.acquire()
     
     readers += 1
-    
+    #Si hay un lector, podemos leer
     if readers == 1:
       freeBuffer.acquire()
       
@@ -136,11 +145,13 @@ class MainWindow(QtWidgets.QMainWindow):
     S_mutex.acquire()
     
     readers -= 1
-    
+    #Si no hay lectores, liberamos el recurso para el escritor
     if readers == 0:
       freeBuffer.release()
     S_mutex.release()
     
+  #Esta función es la que inicializa las señales de cada hilo y posteriormente los inicia
+  #Se dispara pulsando el botón de "Iniciar Lectores-Escritores"
   def run_writers_readers(self):
     global usedBuffer
     usedBuffer = 0
