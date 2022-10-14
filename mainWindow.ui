@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>965</width>
-    <height>416</height>
+    <height>526</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>200</y>
+      <y>320</y>
       <width>741</width>
       <height>71</height>
      </rect>
@@ -104,7 +104,7 @@ QProgressBar::chunk {
      </property>
     </widget>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="productor_label">
     <property name="geometry">
      <rect>
       <x>220</x>
@@ -117,24 +117,24 @@ QProgressBar::chunk {
      <string>Productor</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="lector_1_label">
     <property name="geometry">
      <rect>
-      <x>680</x>
-      <y>30</y>
+      <x>850</x>
+      <y>100</y>
       <width>61</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Consumidor</string>
+     <string>Lector 1</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="bufferBox">
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>280</y>
+      <y>400</y>
       <width>201</width>
       <height>101</height>
      </rect>
@@ -187,17 +187,17 @@ QProgressBar::chunk {
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="iniciar">
+   <widget class="QPushButton" name="iniciar_PC">
     <property name="geometry">
      <rect>
-      <x>440</x>
+      <x>400</x>
       <y>90</y>
-      <width>81</width>
+      <width>161</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>Iniciar</string>
+     <string>Iniciar Productor-Consumidor</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="productorBox_2">
@@ -256,6 +256,115 @@ QProgressBar::chunk {
       <string/>
      </property>
     </widget>
+   </widget>
+   <widget class="QGroupBox" name="bufferBox_2">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>180</y>
+      <width>211</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QGroupBox{
+	background-color: rgb(136, 136, 136);
+	border: none;
+}</string>
+    </property>
+    <property name="title">
+     <string/>
+    </property>
+    <widget class="QGroupBox" name="lectorOn">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>20</y>
+       <width>61</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QGroupBox{
+	background-color:  rgb(14, 216, 31);
+	border: none;
+}</string>
+     </property>
+     <property name="title">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="lectorOff">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>20</y>
+       <width>61</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QGroupBox{
+	background-color:  rgb(255, 0, 0);
+	border: none;
+}</string>
+     </property>
+     <property name="title">
+      <string/>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="lector_2_label">
+    <property name="geometry">
+     <rect>
+      <x>850</x>
+      <y>220</y>
+      <width>61</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lector 2</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="consumidor_label">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>30</y>
+      <width>61</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Consumidor</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="escritor_label">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>30</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Escritor</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="iniciar_LE">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>150</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Iniciar Lectores-Escritores</string>
+    </property>
    </widget>
   </widget>
  </widget>
